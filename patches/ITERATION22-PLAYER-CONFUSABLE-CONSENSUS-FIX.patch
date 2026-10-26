@@ -11,7 +11,7 @@
 -    for (let index = 0; index < a.length; index += 1) {
 -        if (a[index] === b[index]) continue;
 -        changed = true;
--        if (!pairs.has(`${leftText[index]}:${rightText[index]}`)) return false;
+-        if (!pairs.has(`${a[index]}:${b[index]}`)) return false;
 +    const sameLengthConfusables = (leftText, rightText) => {
 +        if (leftText.length !== rightText.length) return false;
 +        let changed = false;
