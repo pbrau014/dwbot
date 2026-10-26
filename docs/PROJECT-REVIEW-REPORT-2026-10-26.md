@@ -12,7 +12,7 @@ The six plans in Dropbox `implementationNew.zip` were read from the archive's ex
 
 Current repository evidence consistently says the authoritative V4 application source is not imported into the repository. The source-of-truth archive (`YoloDiscordBotV4.zip`) and complete Iteration 21 overlay were not found in the available repo tree or Dropbox name search during this pass. The root-level `plan1.txt` was also absent in the repository and not found in the Dropbox name search. For this reason, a new provisional master plan has been initialized as `plan1.txt`, explicitly marked as a reconstruction rather than a verified update to the missing original.
 
-Plan 1's app setup is partially verified. GitHub is available and functional. Superpowers, Linear, and Adobe Acrobat are marked installed. Railway is available but not installed. Installed status is not itself proof that external sign-in, project access, or every app action works. App-specific action endpoints for Superpowers/Linear/Acrobat were not exposed through the active tool set for this execution, so action-level capability is not claimed.
+Plan 1's app setup is partially verified. GitHub is available and functional. Superpowers, Linear, and Adobe Acrobat are marked installed. The owner clarified that Railway is unavailable for download/installation, so it remains blocked rather than awaiting another install attempt. Installed status is not itself proof that external sign-in, project access, or every app action works. App-specific action endpoints for Superpowers/Linear/Acrobat were not exposed through the active tool set for this execution, so action-level capability is not claimed.
 
 The source-independent report and provisional master plan can be committed without pretending source work is complete. Application integration, live Discord testing, HTML implementation, and a manual based on real behavior must remain blocked until the source-of-truth prerequisites are resolved.
 
@@ -30,7 +30,7 @@ No file is marked `VERIFIED COMPLETE` solely because it was reviewed or because 
 2. Inspected the GitHub `implementation.zip` content encoding and ZIP directory listing: `0.txt`–`6.txt`, `score_report_imgToDiscord.html`, and `yolo_tournament_scoreCalculator.html`.
 3. Read repository status/roadmap and handoff/OCR contract documents. Their current claim is that the repo is documentation/evidence and patch-artifact oriented, not a complete imported application build.
 4. Verified the branch list includes `main` and `handoff/transfer-review-2026-10-26`. The branch comparison reports divergence (20 commits ahead and 3 behind), so source integration should be done in an isolated candidate branch and reconciled carefully, not blindly merged.
-5. Verified plugin installation status: Superpowers installed; Linear installed; Adobe Acrobat installed; Railway not installed. GitHub is usable. This does not validate that installed plugin actions are callable for project-specific operations.
+5. Verified plugin installation status: Superpowers installed; Linear installed; Adobe Acrobat installed; Railway unavailable for download/installation per owner clarification. GitHub is usable. This does not validate that installed plugin actions are callable for project-specific operations.
 6. Created this status report and a provisional `plan1.txt` because no original `plan1.txt` was found in the repo or Dropbox name search.
 
 ## D. Incomplete, unverified, and failed evidence
@@ -76,7 +76,7 @@ This 16-image development corpus is not an independent holdout. The hybrid regre
 
 | ID | Status | Blocker and consequence | Required resolution |
 |---|---|---|---|
-| B1 | PARTIALLY VERIFIED | Railway is not installed; installed flags do not prove actual app operations work here. | Connect Railway only if still required and authorized; verify app-specific read/action for each tool. Do not deploy or incur charges without approval. |
+| B1 | BLOCKED | Owner reports Railway is unavailable for download/installation in the current app directory. | No further installation attempt while unavailable. Reassess only if availability changes; keep all OCR local. Verify project-specific app actions for installed integrations when callable. |
 | B2 | BLOCKED | Original V4 ZIP and complete Iteration 21 ZIP are not available in the connected repository / Dropbox search. Code changes and authoritative archive are blocked. | Provide both exact archives as accessible attachments or in an accessible repository path; verify the two expected hashes above before extracting or applying anything. |
 | B3 | PARTIALLY VERIFIED | Original `plan1.txt` not found. | Provide the original if it exists; reconcile rather than overwrite its approved phases. The current file is explicitly provisional. |
 | B4 | BLOCKED | Live Discord tests require verified app source, authorized staging guild/channel, and owner-managed token. | Resolve B2 and verify staging prerequisites; run tests with secrets kept local and evidence redacted. |
@@ -92,7 +92,7 @@ This 16-image development corpus is not an independent holdout. The hybrid regre
 
 ## G. Ordered roadmap and completion gates
 
-1. Complete Plan 1 status checks and record the Railway blocker; installed integrations need an actual action check, not just a prompt.
+1. Plan 1 status checks are partly complete. Railway is an external availability blocker, so no repeated installation attempt is planned. The Plan 1 gate remains open while independent Plan 2 reconciliation proceeds.
 2. Resolve B2 and B3. Verify immutable source and overlay hashes, then apply the 21-entry overlay to an isolated copy and verify every hash. Preserve approved ground truth.
 3. Run clean Windows acceptance on Node.js v24.22.1 x64: `npm ci`, `npm test`, `npm run test:tesseractjs`, explicitly setting `OCR_ENGINE=tesseractjs`, `PADDLEOCR_FIELD_FALLBACK=0`, and `OCR_CV_ASSIST=0` for baseline. Preserve full JSON/logs/runtime versions/hashes.
 4. Finish OpenCV crop-boundary analysis: view original and derived crop overlays, document coordinates/anchors/margins/clipping/neighbour leakage, and run geometry tests. OpenCV must not authorize field values.
