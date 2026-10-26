@@ -1,0 +1,106 @@
+DWBOT MASTER IMPLEMENTATION PLAN (plan1.txt)
+Status date: 2026-10-26
+Status: PROVISIONAL RECONSTRUCTION — original plan1.txt was not found in the repository or Dropbox search during this review.
+Branch: handoff/transfer-review-2026-10-26
+Release status: NO-GO for unattended production.
+
+IMPORTANT SOURCE-OF-TRUTH NOTE
+This file is a newly initialized working master plan reconstructed from the six plans in implementationNew.zip, the repository status/roadmap/evidence, and the transfer review. It is not claimed to be the previously existing plan1.txt. Preserve this provenance until the original master plan is located and reconciled. Do not discard or rewrite historical approved plans.
+
+GOVERNING STATEMENT — EXACT-MATCH ACCEPTANCE AND APPROVED GROUND TRUTH
+Do not weaken exact-match acceptance or change the approved ground truth simply to obtain passing tests.
+
+NON-NEGOTIABLE OCR / PRIVACY REQUIREMENTS
+- Continue using PaddleOCR and OpenCV; all OCR/model/image processing must remain local/offline.
+- Do not add hosted OCR, external AI/image APIs, telemetry, or remote image storage.
+- Tesseract.js remains the default baseline. PaddleOCR is a local optional engine and stays disabled by default (PADDLEOCR_FIELD_FALLBACK=0) unless comparable evidence justifies a separately approved change.
+- OpenCV may propose and validate bounded crop geometry; it must not read/decide text, rank OCR candidates, roster-correct identities, or authorize a value.
+- Ambiguous/missing/conflicting mandatory fields remain unresolved for explicit human correction. Never silently accept an incorrect mandatory value.
+- Eight mandatory fields: result, player, map, mode, battleStart, credits, freeXp, damage. XP is optional and must be reported separately.
+- Preserve the V4 architecture unless evidence proves a targeted change is needed; preserve scoring including the $12.49 regression and Grand Yolo weight 0.9, all four event types (Damage, Kills, Race, Grand Yolo), and seven slots per player/event.
+- Reject the Unicode replacement character U+FFFD in OCR/manual text where specified by the acceptance contract.
+- Keep SQLite single-instance unless multi-process coordination is designed/tested; validate SQLite/JSON recovery consistency.
+- Never commit Discord tokens, .env, live databases, user data, model caches with credentials, or secrets.
+- Keep release NO-GO until all mandatory release gates below have evidence.
+
+CURRENT STATUS SUMMARY
+1.txt — PARTIALLY VERIFIED. GitHub is available and usable in this session. Superpowers, Linear, and Adobe Acrobat are marked installed; their project-specific action endpoints were not exposed in the tool set used for this run, so operational access is not independently demonstrated here. Railway is available but is not installed/connected. Plan 1's setup gate remains open for Railway and verification of actual usable access.
+2.txt — IN PROGRESS / PARTIALLY VERIFIED. Repository evidence/status was reviewed and a review report was created. The original plan1.txt, YoloDiscordBotV4.zip, and complete DWBOT_ITERATION21_PATCH.zip were not found in the repository/application tree or Dropbox search. The archive-import and authoritative-archive gates remain blocked. This file is a provisional reconstruction, not a claim that the original master plan was edited.
+3.txt — BLOCKED. Live Discord integration/recovery tests depend on the verified application source, safe staging access, and owner-authorized credentials. No successful live result is established by this review.
+4.txt — BLOCKED. The GitHub implementation ZIP lists score_report_imgToDiscord.html and yolo_tournament_scoreCalculator.html, but their integration with the actual bot is not verified. Do not implement against guessed backend contracts.
+5.txt — BLOCKED. The manual must describe actual verified behavior. Do not invent commands, buttons, workflows, permissions, or interface behavior before source and integration are verified.
+6.txt — BLOCKED. Final user/developer documentation separation and final manual validation depend on the working implementation and Plan 5 deliverable.
+
+PHASE 0 — Complete Plan 1 setup (1.txt)
+Status: PARTIALLY VERIFIED
+- Verify actual installation/connection and whether callable tools are available for GitHub, Superpowers, Linear, Railway, and Adobe Acrobat.
+- Recorded status on 2026-10-26: GitHub available/usable; Superpowers installed; Linear installed; Adobe Acrobat installed; Railway not installed/connected. Installed status does not alone prove that authentication or project actions work.
+- Connect Railway only if needed and separately authorized; do not deploy, create paid resources, or move OCR off the local host.
+Completion gate: connection/tool capability is verified for every required integration or a precise unresolved blocker/manual action is recorded. This Plan 1 gate is not yet satisfied.
+
+PHASE 1 — Reconcile authoritative project state and produce archive (2.txt)
+Status: IN PROGRESS; source/archive portions BLOCKED.
+1. Inventory source archives, patch overlays, plan files, HTML interfaces, code, manifests, test evidence, manuals, and relevant prior artifacts.
+2. Obtain original YoloDiscordBotV4.zip and verify SHA-256 exactly:
+   b57942298f9d1405946f2eadf249ece94cf1cde05131172e44d0a4cd51099899
+3. Obtain complete DWBOT_ITERATION21_PATCH.zip and verify SHA-256 exactly:
+   35bdedfcfdeb3f861bb6b8e444732962644a053b7140c7494504a13e6c858d14
+4. Preserve originals immutable; extract a clean copy; apply only manifest-listed overlay files; verify all 21 hashes and the eight-mandatory-fields/optional-XP contract.
+5. Run source-independent repository/status reconciliation and update this plan and the review report.
+6. Create one comprehensive project archive only after the authoritative source, plans, reports, tests, and needed deliverables are accessible. Do not label a docs-only pack as the authoritative application archive.
+Completion gate: exact source and overlay hashes verified; status report and master plan reconciled against source; complete archive manifest verified; all blockers and test evidence clearly separated.
+
+PHASE 2 — Live Discord integration testing (3.txt)
+Status: BLOCKED pending Phase 1's source gate and authorized staging prerequisites.
+Test real scenarios: authorized login/connection; channel and role permissions; attachment delivery/processing; rate-limit behavior; restart/reconnect and recovery. Use a staging guild/channel and test account. Preserve logs and exit results; redact secrets. Never claim a test passed unless it actually ran.
+Completion gate: each scenario has a reproducible pass/fail result, evidence file, and remediation result for any defect. If credentials or authorization are unavailable, keep those cases BLOCKED and finish only independent preparation.
+
+PHASE 3 — Player and admin HTML web interfaces (4.txt)
+Status: NOT STARTED / BLOCKED pending verified source and backend/interface contract.
+- Inspect both bundled HTML files and their controls and data flows against the actual source.
+- Preserve scoring, authorization, Discord channel boundaries, data validation, attachment handling, and existing architecture.
+- Do not place bot tokens or privileged secrets in client-side HTML. A standalone browser file must not be assumed able to securely post to Discord without an approved supported mechanism.
+- Test participant and admin permissions, data display, score entry, image intake, error paths, responsive/accessibility behavior, and integration with Discord.
+Completion gate: both interfaces are implemented against real contracts and tested end-to-end; no privileged credentials are exposed; existing bot flows remain intact.
+
+PHASE 4 — User manual (5.txt)
+Status: NOT STARTED / BLOCKED until interface and bot workflows are verified.
+- Add appropriate developer comments in source files, separate from user instructions.
+- Produce one professionally formatted PDF user manual based only on working features.
+- Include clickable contents/table of contents on page 1, summary on page 2, the five required user-instruction topics in the specified order, and relevant minimalistic hand-drawn-style instructional sketches.
+- Cover the general overview; admin HTML use; participant HTML use; admin Discord use; participant Discord use.
+Completion gate: each instruction is confirmed against the actual version; links/navigation, page order, text, and illustrations are inspected; PDF and source comments are delivered.
+
+PHASE 5 — Final documentation separation and release review (6.txt)
+Status: NOT STARTED / BLOCKED pending Phase 4 deliverables.
+- Keep developer documentation/comments separate from user-facing instructions.
+- Recheck the complete PDF structure, clickable contents on page 1, summary on page 2, five chapters in exact order, relevant sketches, and correspondence to the actual app.
+- Revalidate source comments and documentation after any code change affecting user-visible behavior.
+Completion gate: manual and source comments are complete, internally consistent, and verified against the tested application. Overall project cannot be marked complete while mandatory work remains blocked.
+
+PARALLEL LOCAL OCR WORKSTREAM — MUST NOT OVERRIDE SIX-FILE ORDER
+Current evidence says the hybrid previously regressed on a 16-image development corpus:
+- Tesseract.js: 111/128 exact mandatory fields, 7/16 all-eight-exact records, 2 incorrect accepted mandatory fields, 15 unresolved, median 34.9 seconds.
+- Tesseract.js + PaddleOCR hybrid: 108/128 exact fields, 3/16 all-eight-exact records, 4 incorrect accepted mandatory fields, 16 unresolved, median 42.6 seconds.
+Decision: keep PaddleOCR fallback disabled. This is development-corpus evidence, not an independent holdout.
+After source restoration, finish the OpenCV crop-boundary/geometry analysis; freeze input images, their hashes and approved ground truth before tuning; test in-bounds/non-empty crops, margins, adjacent-field overlap, anchor stability, and digit clipping; benchmark identical fixtures for current Tesseract.js, OpenCV-isolated Tesseract.js, and selectively enabled local PaddleOCR. Pin package/model versions and hashes, bundle models for offline runtime, and guard all external network attempts. Report per-field exactness, fully exact records, false accepts, unresolved/review rate, optional XP separately, p50/p95 latency, CPU/RAM, startup, timeouts and network attempts.
+Independent holdout: at least 50 new screenshots (100 preferred), double-reviewed and hash-frozen before candidate scoring; holdout cannot be used for tuning. Hard gate: zero incorrect accepted mandatory values and zero OCR/model network attempts. Every record must be exact on all eight mandatory fields or held for human correction.
+
+FINAL RELEASE GATES
+- Exact V4 base archive and overlay hashes verified; authoritative source restored and recoverable.
+- Clean Windows x64 acceptance using Node.js v24.22.1, clean npm ci, full unit suite and real-image OCR acceptance with full JSON/logs/hash manifest.
+- No inconsistent required/optional acceptance gate; unchanged approved ground truth.
+- Zero incorrectly accepted mandatory fields and zero OCR/model network attempts on the independent holdout.
+- Discord staging tests, persistence/restart/reconnect, backup/restore and rollback rehearsal pass.
+- Sanitized deployable archive verified with hashes; no secrets, live databases, user data, node_modules, .git, or personal cache.
+- Produce final GO / SUPERVISED PILOT / NO-GO decision with evidence. Until every mandatory production criterion passes, remain NO-GO for unattended production.
+
+BLOCKER RECORDS
+B1 — Plan 1 / plugin setup: Railway is not installed/connected; installed flags for Superpowers/Linear/Adobe Acrobat do not independently demonstrate all app operations are callable in this execution context. Status BLOCKED/PARTIALLY VERIFIED. Resolution: connect Railway only if still desired/authorized; verify each app action in its own interface. Impact: plugin setup gate remains open. Retest: run a harmless read-only/action check for each app once callable.
+B2 — Plan 2 / source baseline: original YoloDiscordBotV4.zip and DWBOT_ITERATION21_PATCH.zip were not found in connected repo and Dropbox search during this review. Status BLOCKED. Resolution: provide the exact archives through an accessible attachment or store them in an accessible repository path. Impacts application source integration, exact overlay application, comprehensive package, Plans 3–6. Retest: verify exact SHA-256s, extract clean copies, validate all overlay entries.
+B3 — Plan 2 / original master plan: prior plan1.txt was not found in the repo or Dropbox search. Status PARTIALLY VERIFIED. This file is a provisional reconstructed master plan, not a claimed edit of the original. Resolution: provide the original plan1.txt if it exists; reconcile it without deleting approved phases. Impacts claims about preserving the original plan structure.
+B4 — Plan 3 / live Discord: actual app source plus an authorized staging guild/channel and owner-managed token are prerequisites. Status BLOCKED. Resolution: unblock B2 first and verify staging access. Retest all five scenarios with redacted evidence.
+B5 — Plans 4–6 / interfaces and manual: HTML integration and correct user-facing instructions depend on actual source/backend contract and verified live behavior. Status BLOCKED. Resolution: unblock B2; complete Plans 3 and 4 gates before final manual validation.
+
+ADVANCEMENT DECISION
+Plan 1 is not VERIFIED COMPLETE because Railway and some callable-app verification remain outstanding. The Plan 2 source-independent status reconciliation and documentation may proceed under the blocked-step rules; source-dependent archive assembly and code changes remain blocked. Do not mark Plan 1 or Plan 2 complete until their stated gates pass.
