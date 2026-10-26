@@ -1,8 +1,6 @@
 --- a/src/battle-record.js
 +++ b/src/battle-record.js
-@@ -247,15 +247,49 @@
- function areOcrConfusableVariants(left, right) {
-     const a = String(left || '').toLowerCase();
+@@ -249,11 +249,45 @@
      const b = String(right || '').toLowerCase();
 -    if (!a || a.length !== b.length) return false;
 +    if (!a || !b) return false;
@@ -12,6 +10,8 @@
 -        if (a[index] === b[index]) continue;
 -        changed = true;
 -        if (!pairs.has(`${a[index]}:${b[index]}`)) return false;
+-    }
+-    return changed;
 +    const sameLengthConfusables = (leftText, rightText) => {
 +        if (leftText.length !== rightText.length) return false;
 +        let changed = false;
@@ -51,15 +51,10 @@
 +        // at its strongest single candidate for the confusable-only tie-break.
 +        const family = source ? source.replace(/-psm-?\d+$/i, '') : `__unnamed_${unnamedCandidate++}`;
 +        familyWeights.set(family, Math.max(familyWeights.get(family) || 0, candidate.weight));
-     }
--    return changed;
++    }
 +    return [...familyWeights.values()].reduce((sum, weight) => sum + weight, 0);
  }
- 
- function weightedTextWinner(groups, fieldKey) {
-@@ -286,7 +320,14 @@
-         if (confusablePlayerVariants) {
-             const highQualityGroups = [...groups.values()].map(group => {
+@@ -288,3 +322,10 @@
                  const candidates = group.candidates.filter(candidate => candidate.confidence >= 60);
 -                return { ...group, candidates, weight: candidates.reduce((sum, candidate) => sum + candidate.weight, 0) };
 +                return {
@@ -71,13 +66,9 @@
 +                    weight: weightedPlayerSourceFamilyWeight(candidates),
 +                };
              }).filter(group => group.candidates.length > 0)
-                 .sort((a, b) => b.weight - a.weight || b.candidates.length - a.candidates.length);
-             if (highQualityGroups.length === 1) return highQualityGroups[0];
 --- a/tests/battle-record.test.js
 +++ b/tests/battle-record.test.js
-@@ -321,6 +321,38 @@
- });
- 
+@@ -323,2 +323,34 @@
  
 +test('player consensus resolves a one-glyph insertion only when the independent prepared identity source is stronger', () => {
 +    const record = buildBattleRecord('Defeat', completeFields({
@@ -110,6 +101,3 @@
 +    assert.equal(record.player, NOT_DETECTED);
 +    assert.ok(getMissingRequiredFields(record).some((field) => field.key === 'player'));
 +});
-+
- test('operation result descriptions identify a primary-task victory without a readable Victory title', () => {
-  const { parseBattleResult, parseResultDescription, buildBattleRecord } = require('../src/battle-record');
