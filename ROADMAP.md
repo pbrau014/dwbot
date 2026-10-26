@@ -10,15 +10,18 @@
 
 ## Phase 1 — reproducible regression
 
-- [ ] Clean `npm ci` on Windows Node.js 24.22.1.
-- [ ] Run full `npm test` and OCR-specific suites.
-- [ ] Preserve complete logs, runtime versions, configuration (without secrets), and SHA-256 manifests.
-- [ ] Confirm workbook scoring regression ($12.49) and all event/slot workflows.
+- [ ] Confirm exact Windows Node.js/npm versions and effective OCR configuration.
+- [ ] Reproduce clean `npm ci` and full test suite on the explicitly pinned target runtime (owner-reported run: install succeeded; 171 passed, 0 failed, 3 skipped, but exact runtime version was omitted).
+- [x] Record owner-reported clean install and zero-vulnerability npm audit in [Windows acceptance evidence](evidence/windows-acceptance-2026-10-26.md).
+- [ ] Preserve full logs, report JSON, runtime versions, configuration (without secrets), and SHA-256 manifests in the repository.
+- [ ] Confirm workbook scoring regression ($12.49) and all event/slot workflows on the imported source revision.
 
 ## Phase 2 — OCR safety and acceptance
 
 - [ ] Keep PaddleOCR disabled.
 - [ ] Keep OpenCV limited to bounded crop proposals; it must not recognize or authorize values.
+- [ ] Audit that eight mandatory fields govern completion and optional XP cannot fail the mandatory gate (the latest runner prints a potentially conflicting “all nine fields” message).
+- [ ] Diagnose field-level OCR failures from Windows report JSON/logs, especially Libertad, Schlieffen, and Hoffmann.
 - [ ] Compare native Tesseract and Tesseract.js on identical Windows screenshots, crops, thresholds, and configuration.
 - [ ] Report mandatory-field exactness, fully exact records, false accepts, unresolved values, optional XP separately, and p50/p95 latency.
 - [ ] Freeze a genuinely independent holdout before further tuning.
@@ -42,3 +45,5 @@
 ## Iteration discipline
 
 Each iteration requires an objective, scope, source diff, automated tests, acceptance report, reproducible logs, SHA-256 manifest, rollback instructions, and a release decision. No production approval from unit tests alone.
+
+Track current OCR acceptance investigation in [Issue #1](https://github.com/pbrau014/dwbot/issues/1).
