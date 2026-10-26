@@ -32,11 +32,12 @@ CURRENT STATUS SUMMARY
 6.txt — BLOCKED. Final user/developer documentation separation and final manual validation depend on the working implementation and Plan 5 deliverable.
 
 PHASE 0 — Complete Plan 1 setup (1.txt)
-Status: PARTIALLY VERIFIED
-- Verify actual installation/connection and whether callable tools are available for GitHub, Superpowers, Linear, Railway, and Adobe Acrobat.
-- Recorded status on 2026-10-26: GitHub available/usable; Superpowers installed; Linear installed; Adobe Acrobat installed; Railway not installed/connected. Installed status does not alone prove that authentication or project actions work.
-- Connect Railway only if needed and separately authorized; do not deploy, create paid resources, or move OCR off the local host.
-Completion gate: connection/tool capability is verified for every required integration or a precise unresolved blocker/manual action is recorded. This Plan 1 gate is not yet satisfied.
+Status: PARTIALLY VERIFIED; Railway install substep BLOCKED
+- Verify actual installation/connection and whether callable tools are available for GitHub, Superpowers, Railway, Linear, and Adobe Acrobat.
+- Recorded status on 2026-10-26: GitHub available/usable; Superpowers installed; Linear installed; Adobe Acrobat installed; owner reports Railway is unavailable for download/installation. Installed status does not alone prove authentication or project actions work.
+- Do not retry Railway installation while it remains unavailable. Do not deploy, create paid resources, or move OCR off the local host.
+- Independent Plan 2 reconciliation may proceed; dependent Railway setup work remains blocked and the Plan 1 gate remains open.
+Completion gate: app statuses and callable capabilities are documented, and every unavailable integration has an explicit blocker record. Railway remains BLOCKED until it is made available or the governing plan is formally revised.
 
 PHASE 1 — Reconcile authoritative project state and produce archive (2.txt)
 Status: IN PROGRESS; source/archive portions BLOCKED.
@@ -96,7 +97,7 @@ FINAL RELEASE GATES
 - Produce final GO / SUPERVISED PILOT / NO-GO decision with evidence. Until every mandatory production criterion passes, remain NO-GO for unattended production.
 
 BLOCKER RECORDS
-B1 — Plan 1 / plugin setup: Railway is not installed/connected; installed flags for Superpowers/Linear/Adobe Acrobat do not independently demonstrate all app operations are callable in this execution context. Status BLOCKED/PARTIALLY VERIFIED. Resolution: connect Railway only if still desired/authorized; verify each app action in its own interface. Impact: plugin setup gate remains open. Retest: run a harmless read-only/action check for each app once callable.
+B1 — Plan 1 / plugin setup: Railway is unavailable for download/installation in the current app directory, per the owner's clarification. Status BLOCKED (external availability limitation); do not repeatedly retry or assume it can be installed. Superpowers, Linear and Adobe Acrobat are marked installed, but installed flags do not independently demonstrate all app operations are callable in this execution context. Impact: Plan 1's five-app setup cannot be VERIFIED COMPLETE. Advancement decision: remaining independent Plan 2 reconciliation may proceed under the controlled blocked-step rule; no task dependent on Railway may proceed. Retest only if the owner later reports Railway becomes available. App-specific action capability for the other installed tools should still be verified when callable.
 B2 — Plan 2 / source baseline: original YoloDiscordBotV4.zip and DWBOT_ITERATION21_PATCH.zip were not found in connected repo and Dropbox search during this review. Status BLOCKED. Resolution: provide the exact archives through an accessible attachment or store them in an accessible repository path. Impacts application source integration, exact overlay application, comprehensive package, Plans 3–6. Retest: verify exact SHA-256s, extract clean copies, validate all overlay entries.
 B3 — Plan 2 / original master plan: prior plan1.txt was not found in the repo or Dropbox search. Status PARTIALLY VERIFIED. This file is a provisional reconstructed master plan, not a claimed edit of the original. Resolution: provide the original plan1.txt if it exists; reconcile it without deleting approved phases. Impacts claims about preserving the original plan structure.
 B4 — Plan 3 / live Discord: actual app source plus an authorized staging guild/channel and owner-managed token are prerequisites. Status BLOCKED. Resolution: unblock B2 first and verify staging access. Retest all five scenarios with redacted evidence.
