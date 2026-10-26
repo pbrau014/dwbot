@@ -1,0 +1,128 @@
+--- a/src/battle-record.js
++++ b/src/battle-record.js
+@@ -73,10 +73,24 @@
+     const lines = cleanText(text).split('\n').map((line) => line.trim()).filter(Boolean);
+     for (const line of lines) {
+         const playerMatch = line.match(/\[([A-Z0-9_-]{2,})\]\s*([A-Z0-9][A-Z0-9_.-]{1,})/i);
+-        if (!playerMatch) continue;
+-
+-        const player = `[${playerMatch[1]}]${playerMatch[2]}`;
+-        let after = line.slice(playerMatch.index + playerMatch[0].length);
++        let player;
++        let playerEnd;
++        if (playerMatch) {
++            player = `[${playerMatch[1]}]${playerMatch[2]}`;
++            playerEnd = playerMatch.index + playerMatch[0].length;
++        } else {
++            // A common crop-edge failure drops only the opening '[' from the
++            // clan prefix (e.g. "HO-FL]VeritechCEO »» X THUNDERER"). Repair
++            // that delimiter only when a closing bracket, player token and
++            // explicit ship separator/tier are all present on the same line.
++            // This is structural parsing, not an OCR character substitution.
++            const clippedTag = line.match(/(?:^|[\s|])([A-Z0-9_-]{2,})\]\s*([A-Z0-9][A-Z0-9_.-]{1,})(?=\s*(?:[»›]+|(?:XI|VIII|VII|VI|IX|V|IV|III|II|X|I)\s))/i);
++            if (!clippedTag) continue;
++            const tagStart = clippedTag.index + clippedTag[0].indexOf(clippedTag[1]);
++            player = `[${clippedTag[1]}]${clippedTag[2]}`;
++            playerEnd = tagStart + clippedTag[1].length + 1 + line.slice(tagStart + clippedTag[1].length + 1).match(/^\s*/)[0].length + clippedTag[2].length;
++        }
++        let after = line.slice(playerEnd);
+@@ -278,15 +292,22 @@
+     return false;
+ }
+ 
+-function weightedPlayerSourceFamilyWeight(candidates) {
++function playerSourceFamily(candidate, unnamedIndex = 0) {
++    const source = String(candidate.source || '').trim();
++    return source ? source.replace(/-psm-?\d+$/i, '') : `__unnamed_${unnamedIndex}`;
++}
++
++function weightedPlayerSourceFamilyWeight(candidates, unambiguousFamilies, groupKey) {
+     const familyWeights = new Map();
+-    let unnamedCandidate = 0;
+-    for (const candidate of candidates) {
+-        const source = String(candidate.source || '').trim();
+-        // Multiple PSMs/crop variants from the same labelled source family are
+-        // correlated reads, not independent votes. Cap that family's influence
+-        // at its strongest single candidate for the confusable-only tie-break.
+-        const family = source ? source.replace(/-psm-?\d+$/i, '') : `__unnamed_${unnamedCandidate++}`;
++    for (let index = 0; index < candidates.length; index += 1) {
++        const candidate = candidates[index];
++        const family = playerSourceFamily(candidate, index);
++        // A source family that produced more than one competing spelling is
++        // internally inconsistent and casts no vote for either spelling. This
++        // prevents a family split across O/Q (or O/0) variants being counted
++        // once in each group's score. Repeated PSM/crop reads remain correlated.
++        const supportedKeys = unambiguousFamilies.get(family);
++        if (!supportedKeys || supportedKeys.size !== 1 || !supportedKeys.has(groupKey)) continue;
+         familyWeights.set(family, Math.max(familyWeights.get(family) || 0, candidate.weight));
+     }
+     return [...familyWeights.values()].reduce((sum, weight) => sum + weight, 0);
+@@ -318,21 +339,34 @@
+         const confusablePlayerVariants = highQuality.length >= 2 &&
+             highQuality.every((candidate) => areOcrConfusableVariants(candidate.value, highQuality[0].value) || candidate.value === highQuality[0].value);
+         if (confusablePlayerVariants) {
+-            const highQualityGroups = [...groups.values()].map(group => {
++            // First map each source family to every spelling it supported. A
++            // family split across spellings is ambiguous evidence and therefore
++            // contributes zero vote to every side, rather than being double-counted.
++            const unambiguousFamilies = new Map();
++            for (const [groupKey, group] of groups.entries()) {
++                for (const candidate of group.candidates.filter(item => item.confidence >= 60)) {
++                    const family = playerSourceFamily(candidate);
++                    const support = unambiguousFamilies.get(family) || new Set();
++                    support.add(groupKey);
++                    unambiguousFamilies.set(family, support);
++                }
++            }
++            const highQualityGroups = [...groups.entries()].map(([groupKey, group]) => {
+                 const candidates = group.candidates.filter(candidate => candidate.confidence >= 60);
+                 return {
+                     ...group,
+                     candidates,
+-                    // Keep the ordinary aggregate weight for non-player consensus,
+-                    // but use independent labelled source families to break a
+-                    // player-name tie between otherwise OCR-confusable spellings.
+-                    weight: weightedPlayerSourceFamilyWeight(candidates),
++                    // A source family votes only when it supports one spelling.
++                    weight: weightedPlayerSourceFamilyWeight(candidates, unambiguousFamilies, groupKey),
+                 };
+             }).filter(group => group.candidates.length > 0)
+                 .sort((a, b) => b.weight - a.weight || b.candidates.length - a.candidates.length);
+-            if (highQualityGroups.length === 1) return highQualityGroups[0];
++            if (highQualityGroups.length === 1 && highQualityGroups[0].weight >= 1) return highQualityGroups[0];
+             if (highQualityGroups.length > 1 && highQualityGroups[0].weight > highQualityGroups[1].weight &&
+                 highQualityGroups[0].weight >= 1 && highQualityGroups[0].candidates.length >= 1) return highQualityGroups[0];
++            // Do not let the generic majority-count rule below re-accept a
++            // confusable spelling after independent-source evidence was tied or weak.
++            return null;
+         }
+     }
+     // Text fields can tolerate one weak/fragmented crop disagreeing when two
+ 
+--- a/tests/battle-record.test.js
++++ b/tests/battle-record.test.js
+@@ -340,6 +340,27 @@
+     assert.deepEqual(getMissingRequiredFields(record), []);
+ });
+ 
++test('identity parsing repairs a clipped opening clan bracket only when the ship separator is present', () => {
++    const parsed = parseIdentityLine('Victory!\nOur team completed the primary task.\nHO-FL]VeritechCEO »» X THUNDERER');
++    assert.equal(parsed.player, '[HO-FL]VeritechCEO');
++    assert.equal(parsed.ship, 'X THUNDERER');
++});
++
++test('player consensus holds O/Q conflict when only one source family supports the selected spelling', () => {
++    const record = buildBattleRecord('Victory', completeFields({
++        identityCandidates: [
++            { text: 'Victory!\nOur team completed the primary task.\nHO-FL]VeritechCEO »» X THUNDERER', confidence: 74, weight: 1.5, source: 'prepared-identity-psm6' },
++            { text: 'Victory!\nOur team completed the primary task.\nHO-FL]VeritechCEQ »» X THUNDERER', confidence: 73, weight: 1.5, source: 'prepared-identity-psm11' },
++            { text: 'n completed the primary task.\nitechCEQ ¥» X THUNDERER', confidence: 79, weight: 1.1, source: 'source-identity-psm6' },
++            { text: 'n completed the primary task.\n itechCEO 7» X THUNDERER', confidence: 78, weight: 1.1, source: 'source-identity-psm11' },
++            { text: '[HO-FL]VeritechCEQ »» X THUNDERER', confidence: 76, weight: 0.7, source: 'full-screen-psm3' },
++            { text: '[HO-FL]VeritechCEQ »» X THUNDERER', confidence: 80, weight: 0.7, source: 'full-screen-psm11' },
++        ],
++    }));
++    assert.equal(record.player, NOT_DETECTED);
++    assert.ok(getMissingRequiredFields(record).some((field) => field.key === 'player'));
++});
++
