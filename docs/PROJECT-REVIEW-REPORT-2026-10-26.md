@@ -88,7 +88,7 @@ This 16-image development corpus is not an independent holdout. The hybrid regre
 2. **Missing master plan.** Plan 2 requests an update to `plan1.txt`, but it was not found in the current repo or Dropbox name search. The new plan is transparently labelled provisional; no claim is made that an original was edited.
 3. **Reported tests are not all equivalent.** Linux unit/regression success with reused dependencies is not Windows acceptance. Owner-reported Windows unit success does not outweigh the failing OCR acceptance sequence. The “all nine fields” wording conflicts with the eight mandatory fields plus optional XP contract; use the eight-field contract from the Iteration 21 evidence and re-run acceptance against the exact patched revision.
 4. **PaddleOCR hybrid regressed on development data.** Keep it disabled; do not change ground truth or reduce the zero-false-accept gate. Continue the local-only Paddle/OpenCV architecture through measured geometry analysis, matched benchmarking, and human review.
-5. **Hosting scope.** Railway is optional, not permission to move OCR, screenshots, local models, or private tournament data into hosted services. Keep OCR local/offline.
+5. **Hosting scope.** The owner confirms Railway is unavailable for download; it is optional and installation is not a gate. This is not permission to move OCR, screenshots, local models, or private tournament data into hosted services. Keep OCR local/offline.
 
 ## G. Ordered roadmap and completion gates
 
