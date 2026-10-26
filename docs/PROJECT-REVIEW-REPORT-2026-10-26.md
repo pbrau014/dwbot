@@ -8,7 +8,7 @@
 
 ## A. Executive summary
 
-The six plans in Dropbox `implementationNew.zip` were read from the archive's extracted text. The GitHub `implementation.zip` archive's ZIP directory lists `0.txt`–`6.txt`, plus `score_report_imgToDiscord.html` and `yolo_tournament_scoreCalculator.html`; its plan file set therefore differs from Dropbox's six-file sequence. The two HTML filenames are present in the archive listing, but their operation and bot integration are not established by a ZIP listing alone.
+The six plans in Dropbox `implementationNew.zip` were read from the archive's extracted text. Direct archive comparison confirms that GitHub `main`'s `implementation.zip` and Dropbox `/implementationNew.zip` contain byte-identical copies of `1.txt`–`6.txt` and both HTML files. GitHub's archive adds only `0.txt`. Their measured SHA-256 values are `088b16a4f36acb80dd576ccb1dda440ba14410f10101041bbd597a3a518ee4af` (GitHub) and `0644d2ea41be1f53e2636891bd6706b4608a4fd627c772cb41a3199fc24a6f0b` (Dropbox). These are plans/interface assets; their presence does not verify HTML integration. See [archive comparison evidence](../evidence/archive-comparison-2026-10-26.md).
 
 Current repository evidence consistently says the authoritative V4 application source is not imported into the repository. The source-of-truth archive (`YoloDiscordBotV4.zip`) and complete Iteration 21 overlay were not found in the available repo tree or Dropbox name search during this pass. The root-level `plan1.txt` was also absent in the repository and not found in the Dropbox name search. For this reason, a new provisional master plan has been initialized as `plan1.txt`, explicitly marked as a reconstruction rather than a verified update to the missing original.
 
@@ -45,7 +45,7 @@ The expected Iteration 21 overlay ZIP hash recorded in the transfer review is:
 
 `35bdedfcfdeb3f861bb6b8e444732962644a053b7140c7494504a13e6c858d14`
 
-Neither archive was found in the searched GitHub repo tree or Dropbox search results in this pass. These hashes are target verification values, **not hashes measured from currently available archive bytes**.
+Neither authoritative archive (`YoloDiscordBotV4.zip` or `DWBOT_ITERATION21_PATCH.zip`) was found in the searched GitHub repo tree or Dropbox search results in this pass. These hashes are target verification values, **not hashes measured from currently available archive bytes**. The separate plan/interface ZIPs were measured and compared; they do not satisfy either authoritative archive hash.
 
 Existing repository evidence records a prior patched-copy regression run of 178/178 tests on Linux with Node 24.17.0 and npm 11.13.0 using an existing dependency directory. That is useful unit/regression evidence, but it is not a clean install, target-Windows acceptance, real-image OCR acceptance, independent holdout, or live Discord run.
 
