@@ -1,0 +1,33 @@
+--- a/src/battle-record.js
++++ b/src/battle-record.js
+@@ -248,7 +248,7 @@
+     const a = String(left || '').toLowerCase();
+     const b = String(right || '').toLowerCase();
+     if (!a || !b) return false;
+-    const pairs = new Set(['0:o', 'o:0', '1:l', 'l:1', '1:i', 'i:1', 'i:l', 'l:i', '5:s', 's:5', '8:b', 'b:8', '6:g', 'g:6', 'h:b', 'b:h']);
++    const pairs = new Set(['0:o', 'o:0', 'q:o', 'o:q', '1:l', 'l:1', '1:i', 'i:1', 'i:l', 'l:i', '5:s', 's:5', '8:b', 'b:8', '6:g', 'g:6', 'h:b', 'b:h']);
+     const sameLengthConfusables = (leftText, rightText) => {
+         if (leftText.length !== rightText.length) return false;
+         let changed = false;
+--- a/tests/battle-record.test.js
++++ b/tests/battle-record.test.js
+@@ -340,6 +340,19 @@
+     assert.deepEqual(getMissingRequiredFields(record), []);
+ });
+ 
++test('player consensus resolves an O/Q confusable only with stronger independent identity evidence', () => {
++    const record = buildBattleRecord('Victory', completeFields({
++        identityCandidates: [
++            { text: '[HO-FL]VeritechCEO X ARCHERFISH', confidence: 82, weight: 1.5, source: 'prepared-identity-psm6' },
++            { text: '[HO-FL]VeritechCEO X ARCHERFISH', confidence: 80, weight: 1.5, source: 'prepared-identity-psm11' },
++            { text: '[HO-FL]VeritechCEQ X ARCHERFISH', confidence: 88, weight: 1.1, source: 'identity-rescue-psm6' },
++            { text: '[HO-FL]VeritechCEQ X ARCHERFISH', confidence: 86, weight: 1.1, source: 'identity-rescue-psm11' },
++        ],
++    }));
++    assert.equal(record.player, '[HO-FL]VeritechCEO');
++    assert.deepEqual(getMissingRequiredFields(record), []);
++});
++
+ test('player consensus remains unresolved when confusable spellings have tied independent source support', () => {
+     const record = buildBattleRecord('Defeat', completeFields({
+         identityCandidates: [

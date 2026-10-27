@@ -1,0 +1,103 @@
+--- a/src/battle-record.js
++++ b/src/battle-record.js
+@@ -249,11 +249,45 @@
+     const b = String(right || '').toLowerCase();
+-    if (!a || a.length !== b.length) return false;
++    if (!a || !b) return false;
+     const pairs = new Set(['0:o', 'o:0', '1:l', 'l:1', '1:i', 'i:1', 'i:l', 'l:i', '5:s', 's:5', '8:b', 'b:8', '6:g', 'g:6', 'h:b', 'b:h']);
+-    let changed = false;
+-    for (let index = 0; index < a.length; index += 1) {
+-        if (a[index] === b[index]) continue;
+-        changed = true;
+-        if (!pairs.has(`${a[index]}:${b[index]}`)) return false;
+-    }
+-    return changed;
++    const sameLengthConfusables = (leftText, rightText) => {
++        if (leftText.length !== rightText.length) return false;
++        let changed = false;
++        for (let index = 0; index < leftText.length; index += 1) {
++            if (leftText[index] === rightText[index]) continue;
++            changed = true;
++            if (!pairs.has(`${leftText[index]}:${rightText[index]}`)) return false;
++        }
++        return changed;
++    };
++    if (a.length === b.length) return sameLengthConfusables(a, b);
++
++    // A second, adjacent OCR glyph can be inserted beside an ambiguous glyph
++    // (e.g. "O0ld..." for "Old..."). Permit exactly one insertion/deletion,
++    // and only when removing that one character yields the other spelling or a
++    // same-length confusable variant. This is used solely by the multi-source
++    // player-name consensus gate, never as an unconditional string rewrite.
++    if (Math.abs(a.length - b.length) !== 1) return false;
++    const longer = a.length > b.length ? a : b;
++    const shorter = a.length > b.length ? b : a;
++    const insertableConfusables = new Set(['0', 'o', '1', 'i', 'l', '5', 's', '8', 'b', '6', 'g', 'h']);
++    for (let index = 0; index < longer.length; index += 1) {
++        if (!insertableConfusables.has(longer[index])) continue;
++        const reduced = longer.slice(0, index) + longer.slice(index + 1);
++        if (reduced === shorter || sameLengthConfusables(reduced, shorter)) return true;
++    }
++    return false;
++}
++
++function weightedPlayerSourceFamilyWeight(candidates) {
++    const familyWeights = new Map();
++    let unnamedCandidate = 0;
++    for (const candidate of candidates) {
++        const source = String(candidate.source || '').trim();
++        // Multiple PSMs/crop variants from the same labelled source family are
++        // correlated reads, not independent votes. Cap that family's influence
++        // at its strongest single candidate for the confusable-only tie-break.
++        const family = source ? source.replace(/-psm-?\d+$/i, '') : `__unnamed_${unnamedCandidate++}`;
++        familyWeights.set(family, Math.max(familyWeights.get(family) || 0, candidate.weight));
++    }
++    return [...familyWeights.values()].reduce((sum, weight) => sum + weight, 0);
+ }
+@@ -288,3 +322,10 @@
+                 const candidates = group.candidates.filter(candidate => candidate.confidence >= 60);
+-                return { ...group, candidates, weight: candidates.reduce((sum, candidate) => sum + candidate.weight, 0) };
++                return {
++                    ...group,
++                    candidates,
++                    // Keep the ordinary aggregate weight for non-player consensus,
++                    // but use independent labelled source families to break a
++                    // player-name tie between otherwise OCR-confusable spellings.
++                    weight: weightedPlayerSourceFamilyWeight(candidates),
++                };
+             }).filter(group => group.candidates.length > 0)
+--- a/tests/battle-record.test.js
++++ b/tests/battle-record.test.js
+@@ -323,2 +323,34 @@
+ 
++test('player consensus resolves a one-glyph insertion only when the independent prepared identity source is stronger', () => {
++    const record = buildBattleRecord('Defeat', completeFields({
++        identityCandidates: [
++            { text: '[OVF]OldschoolGaming_YouTube VIII ASASHIO', confidence: 69, weight: 1.5, source: 'prepared-identity-psm6' },
++            { text: '[OVF]OldschoolGaming_YouTube VIII ASASHIO', confidence: 68, weight: 1.5, source: 'prepared-identity-psm11' },
++            { text: '[OVF]0ldschoolGaming_YouTube VIII ASASHIO', confidence: 77, weight: 1.1, source: 'source-identity-psm6' },
++            { text: '[OVF]0ldschoolGaming_YouTube VIII ASASHIO', confidence: 74, weight: 1.1, source: 'source-identity-psm11' },
++            { text: '[OVF]O0ldschoolGaming_YouTube VIII ASASHIO', confidence: 81, weight: 1.1, source: 'identity-rescue-psm6' },
++            { text: '[OVF]O0ldschoolGaming_YouTube VIII ASASHIO', confidence: 81, weight: 1.1, source: 'identity-rescue-psm11' },
++            { text: '[OVF]O0ldschoolGaming_YouTube VIII ASASHIO', confidence: 84, weight: 1.1, source: 'identity-rescue-psm6' },
++            { text: '[OVF]O0ldschoolGaming_YouTube VIII ASASHIO', confidence: 80, weight: 1.1, source: 'identity-rescue-psm11' },
++            { text: '[OVF]OIdschoolGaming_YouTube VIII ASASHIO', confidence: 85, weight: 0.7, source: 'full-screen-psm3' },
++            { text: '[OVF]OIdschoolGaming_YouTube VIII ASASHIO', confidence: 76, weight: 0.7, source: 'full-screen-psm11' },
++        ],
++    }));
++    assert.equal(record.player, '[OVF]OldschoolGaming_YouTube');
++    assert.deepEqual(getMissingRequiredFields(record), []);
++});
++
++test('player consensus remains unresolved when confusable spellings have tied independent source support', () => {
++    const record = buildBattleRecord('Defeat', completeFields({
++        identityCandidates: [
++            { text: '[OVF]OldschoolGaming_YouTube VIII ASASHIO', confidence: 75, weight: 1.1, source: 'prepared-identity-psm6' },
++            { text: '[OVF]OldschoolGaming_YouTube VIII ASASHIO', confidence: 74, weight: 1.1, source: 'prepared-identity-psm11' },
++            { text: '[OVF]O0ldschoolGaming_YouTube VIII ASASHIO', confidence: 81, weight: 1.1, source: 'identity-rescue-psm6' },
++            { text: '[OVF]O0ldschoolGaming_YouTube VIII ASASHIO', confidence: 80, weight: 1.1, source: 'identity-rescue-psm11' },
++        ],
++    }));
++    assert.equal(record.player, NOT_DETECTED);
++    assert.ok(getMissingRequiredFields(record).some((field) => field.key === 'player'));
++});

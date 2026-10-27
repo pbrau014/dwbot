@@ -1,0 +1,102 @@
+--- a/src/bot.js
++++ b/src/bot.js
+@@ -35,2 +35,3 @@
+     hasIndependentRewardFieldPrefixConflict,
++    selectAnchoredCreditAfterTrailingAdornment,
+     selectConsistentRewardTuple,
+@@ -2137,3 +2138,11 @@
+                     : [];
+-                if (clippedFreeXpQuorums.length === 1) {
++                const trailingAdornedCreditAnchor = field === 'credits'
++                    ? selectAnchoredCreditAfterTrailingAdornment(anchor, stable, legacyRewardCandidates)
++                    : '';
++                if (trailingAdornedCreditAnchor) {
++                    fieldEvidence.selectedValue = trailingAdornedCreditAnchor;
++                    fieldEvidence.selectionStrategy = 'independently-supported-credit-anchor-trailing-currency-glyph';
++                    fieldEvidence.unresolved = false;
++                    localizedRewardEvidence.values[field] = trailingAdornedCreditAnchor;
++                } else if (clippedFreeXpQuorums.length === 1) {
+                     fieldEvidence.selectedValue = anchorValue;
+--- a/src/number-parser.js
++++ b/src/number-parser.js
+@@ -177,2 +177,33 @@
+     });
++}
++
++/**
++ * Reconcile one narrow Credits icon-adornment pattern without rewriting OCR text:
++ * a single localized row token contains the complete valid Credits digits plus a
++ * trailing nonnumeric currency glyph (for example `317943®`), independent broad
++ * reads agree on those digits, and the only stable crop quorum has exactly one
++ * extra trailing zero (`3179430`) consistent with that glyph. Any competing
++ * stable group, independent conflict, or weak crop quorum fails closed.
++ * Returns the anchored digit string or an empty string.
++ */
++function selectAnchoredCreditAfterTrailingAdornment(anchor, stableGroups = [], candidates = []) {
++    const source = String(anchor?.source || '');
++    const text = String(anchor?.groupedText || anchor?.text || '').trim();
++    const digits = normaliseOcrNumber(anchor?.groupedDigits || anchor?.digits || '');
++    if (!source.includes('localized-word-geometry')) return '';
++    if (Array.isArray(anchor?.groupedWords) && anchor.groupedWords.length !== 1) return '';
++    if (!/^\d{5,9}[^\d\s,.'’`]+$/u.test(text)) return '';
++    const textDigits = text.match(/^\d+/)?.[0] || '';
++    if (!/^\d{5,9}$/.test(digits) || textDigits !== digits) return '';
++    if (!hasIndependentRewardFieldValueSupport('credits', digits, candidates)) return '';
++    if (hasIndependentRewardFieldConflict('credits', digits, candidates)) return '';
++    if (!Array.isArray(stableGroups) || stableGroups.length !== 1) return '';
++    const group = stableGroups[0];
++    if (normaliseOcrNumber(group?.value) !== `${digits}0`) return '';
++    if ((group?.reads?.length ?? 0) < 6) return '';
++    const geometryCount = group?.geometries instanceof Set ? group.geometries.size : Number(group?.geometries) || 0;
++    const psmCount = group?.psms instanceof Set ? group.psms.size : Number(group?.psms) || 0;
++    if (geometryCount < 3 || psmCount < 2) return '';
++    if (hasIndependentRewardFieldValueSupport('credits', group.value, candidates)) return '';
++    return digits;
+ }
+@@ -319,2 +350,3 @@
+     hasIndependentRewardFieldPrefixConflict,
++    selectAnchoredCreditAfterTrailingAdornment,
+     selectConsistentRewardTuple,
+--- a/tests/localized-numeric-parser.test.js
++++ b/tests/localized-numeric-parser.test.js
+@@ -3,3 +3,3 @@
+ const assert = require('node:assert/strict');
+-const { parseLocalizedNumericField, selectLocalizedRewardValue, hasIndependentRewardFieldValueSupport, hasIndependentRewardFieldConflict, hasIndependentRewardFieldPrefixConflict, reconcileCreditPrefix } = require('../src/number-parser');
++const { parseLocalizedNumericField, selectLocalizedRewardValue, hasIndependentRewardFieldValueSupport, hasIndependentRewardFieldConflict, hasIndependentRewardFieldPrefixConflict, reconcileCreditPrefix, selectAnchoredCreditAfterTrailingAdornment } = require('../src/number-parser');
+ 
+@@ -126 +126,35 @@
+ });
++
++
++test('Credits can ignore one trailing currency glyph only with a complete supported row anchor and unique strong crop quorum', () => {
++    const anchor = {
++        source: 'localized-word-geometry', text: '317943®', groupedText: '317943®',
++        groupedDigits: '317943', groupedWords: ['317943®'],
++    };
++    const groups = [{ value: '3179430', reads: Array(6).fill({}), geometries: new Set([0, 1, 2]), psms: new Set([7, 8]) }];
++    const broad = [
++        { credits: '317943', confidence: 69, source: 6 },
++        { credits: '317943', confidence: 69, source: 7 },
++    ];
++    assert.equal(selectAnchoredCreditAfterTrailingAdornment(anchor, groups, broad), '317943');
++});
++
++test('Credits trailing-glyph recovery fails closed on weak or competing evidence', () => {
++    const anchor = {
++        source: 'localized-word-geometry', text: '317943®', groupedText: '317943®',
++        groupedDigits: '317943', groupedWords: ['317943®'],
++    };
++    const strong = [{ value: '3179430', reads: Array(6).fill({}), geometries: new Set([0, 1, 2]), psms: new Set([7, 8]) }];
++    const broad = [
++        { credits: '317943', confidence: 69, source: 6 },
++        { credits: '317943', confidence: 69, source: 7 },
++    ];
++    assert.equal(selectAnchoredCreditAfterTrailingAdornment(anchor, strong, [{ credits: '317943', confidence: 69, source: 6 }]), '');
++    assert.equal(selectAnchoredCreditAfterTrailingAdornment(anchor, [...strong, { ...strong[0], value: '317943' }], broad), '');
++    assert.equal(selectAnchoredCreditAfterTrailingAdornment(anchor, [{ ...strong[0], reads: Array(5).fill({}) }], broad), '');
++    assert.equal(selectAnchoredCreditAfterTrailingAdornment({ ...anchor, groupedWords: ['317', '943®'] }, strong, broad), '');
++    assert.equal(selectAnchoredCreditAfterTrailingAdornment({ ...anchor, groupedText: '317943', text: '317943' }, strong, broad), '');
++    assert.equal(selectAnchoredCreditAfterTrailingAdornment(anchor, strong, [
++        ...broad, { credits: '3179430', confidence: 80, source: 'other-read' },
++    ]), '');
++});
